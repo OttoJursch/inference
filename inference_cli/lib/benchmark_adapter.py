@@ -1,4 +1,6 @@
 import os.path
+import onnxruntime
+import pkg_resources
 from dataclasses import asdict
 from datetime import datetime
 from threading import Thread
@@ -135,6 +137,9 @@ def dump_benchmark_results(
     benchmark_results: InferenceStatistics,
 ) -> None:
     platform_specifics = retrieve_platform_specifics()
+    if platform_specifics["cuda_major_version"] == "12" and pkg_resources.parse_version(onnxruntime.__version__) < pkg_resources.parse_version("1.17.1"):
+        raise ImportError(f"Version onnxruntime-gpu=={onnxruntime.__version__} is incompatible with CUDA {platform_specifics["cuda_major_version"]}.{platform_specifics["cuda_minor_version"]}; please follow the instructions at https://onnxruntime.ai/docs/install/#install-onnx-runtime-gpu-cuda-12x to utilize the gpu")
+
     if os.path.isdir(output_location):
         target_path = os.path.join(
             output_location, f"{datetime.now().isoformat()}.json"
